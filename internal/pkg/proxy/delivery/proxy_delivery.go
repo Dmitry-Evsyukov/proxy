@@ -15,7 +15,7 @@ func (ps *ProxyServer) ListenAndServe(addr string) error {
 	server := http.Server{
 		Addr: addr,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+			ps.proxyHttp(w, r)
 		}),
 		DisableGeneralOptionsHandler: false,
 		TLSConfig:                    nil,
@@ -58,22 +58,32 @@ func (ps *ProxyServer) proxyHttp(w http.ResponseWriter, r *http.Request) {
 	err := ps.proxyRepo.SaveRequest(r)
 	if err != nil {
 		log.Errorln("error saving request", err)
+		return
 	}
 
-	resp, err := http.DefaultClient.Do(r)
+	r.RequestURI = ""
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Do(r)
 	if err != nil {
 		log.Errorln("error proxying request to another host", err)
+		return
 	}
 	defer resp.Body.Close()
 
 	err = ps.proxyRepo.SaveResponse(resp)
 	if err != nil {
 		log.Errorln("error saving response", err)
+		return
 	}
 
 	err = copyRespToWriter(w, resp)
 	if err != nil {
 		log.Errorln("error saving response", err)
+		return
 	}
 	return
 }
