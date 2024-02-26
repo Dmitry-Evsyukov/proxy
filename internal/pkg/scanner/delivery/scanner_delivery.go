@@ -1,25 +1,24 @@
 package delivery
 
 import (
-	"main/internal/pkg/proxy"
+	"main/internal/pkg/scanner"
 	"net/http"
 )
 
 type ScannerHandler struct {
-	proxyRepo proxy.Repository
+	scannerRepo scanner.Repository
 }
 
-//go func() {
-//	router := mux.NewRouter()
-//	router.HandleFunc("/requests", AllRequests).Methods("GET")
-//	router.HandleFunc("/request/{id}", GetRequest).Methods("GET")
-//	router.HandleFunc("/scan/{id}", ScanRequest).Methods("GET")
-//	router.HandleFunc("/repeat/{id}", RepeatRequest).Methods("GET")
-//	log.Fatal(http.ListenAndServe(webApiAddr, router))
-//}()
-
 func (sh *ScannerHandler) AllRequests(w http.ResponseWriter, r *http.Request) {
+	ids, err := sh.scannerRepo.GetAllIds()
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
+	for _, id := range ids {
+
+	}
 }
 
 func (sh *ScannerHandler) GetRequest(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +33,6 @@ func (sh *ScannerHandler) RepeatRequest(w http.ResponseWriter, r *http.Request) 
 
 }
 
-func NewScannerHandler(repository proxy.Repository) *ScannerHandler {
-	return &ScannerHandler{proxyRepo: repository}
+func NewScannerHandler(repository scanner.Repository) *ScannerHandler {
+	return &ScannerHandler{scannerRepo: repository}
 }

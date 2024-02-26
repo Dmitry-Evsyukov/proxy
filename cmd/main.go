@@ -7,6 +7,7 @@ import (
 	proxyDelivery "main/internal/pkg/proxy/delivery"
 	proxyRepo "main/internal/pkg/proxy/repo"
 	"main/internal/pkg/scanner/delivery"
+	scannerRepo "main/internal/pkg/scanner/repo"
 	"net/http"
 )
 
@@ -18,11 +19,11 @@ func main() {
 	pg := init_db.NewConn(dbUrl)
 
 	pr := proxyRepo.New(pg)
-	//sr := scannerRepo.New(pg)
+	sr := scannerRepo.New(pg)
 
 	proxy := proxyDelivery.NewProxy(pr)
 
-	scannerHandler := delivery.NewScannerHandler(pr)
+	scannerHandler := delivery.NewScannerHandler(sr)
 	go func() {
 		router := mux.NewRouter()
 		router.HandleFunc("/requests", scannerHandler.AllRequests).Methods("GET")
