@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"main/internal/db/init_db"
 	proxyDelivery "main/internal/pkg/proxy/delivery"
@@ -11,7 +12,7 @@ import (
 	"net/http"
 )
 
-const dbUrl = "postgres://proxy:proxy@service-db-postgres:5432/proxy"
+const dbUrl = "postgres://proxy:proxy@localhost:5432/proxy?sslmode=disable"
 const proxyAddr = ":8081"
 const webApiAddr = ":8000"
 

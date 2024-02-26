@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"main/internal/pkg/scanner"
 	"net/http"
 	"strconv"
@@ -33,11 +34,13 @@ func (sh *ScannerHandler) AllRequests(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sh *ScannerHandler) GetRequest(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.Form.Get("id"))
+	idStr := mux.Vars(r)["id"]
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	req, err := sh.scannerRepo.GetRequest(id)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -63,7 +66,20 @@ func (sh *ScannerHandler) ScanRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sh *ScannerHandler) RepeatRequest(w http.ResponseWriter, r *http.Request) {
+	idStr := mux.Vars(r)["id"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
+	req, err := sh.scannerRepo.GetRequest(id)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	return
 }
 
 func NewScannerHandler(repository scanner.Repository) *ScannerHandler {

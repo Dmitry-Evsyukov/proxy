@@ -55,7 +55,7 @@ func copyRespToWriter(w http.ResponseWriter, resp *http.Response) error {
 func (ps *ProxyServer) proxyHttp(w http.ResponseWriter, r *http.Request) {
 	r.Header.Del(ProxyHeader)
 
-	err := ps.proxyRepo.SaveRequest(r)
+	reqId, err := ps.proxyRepo.SaveRequest(r)
 	if err != nil {
 		log.Errorln("error saving request", err)
 		return
@@ -74,7 +74,7 @@ func (ps *ProxyServer) proxyHttp(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	err = ps.proxyRepo.SaveResponse(resp)
+	err = ps.proxyRepo.SaveResponse(resp, reqId)
 	if err != nil {
 		log.Errorln("error saving response", err)
 		return

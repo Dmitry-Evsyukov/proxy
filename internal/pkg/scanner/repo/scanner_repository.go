@@ -2,6 +2,7 @@ package scannerRepo
 
 import (
 	"database/sql"
+	"encoding/json"
 	"main/internal/models"
 	"main/internal/pkg/scanner"
 )
@@ -12,7 +13,7 @@ type Postgres struct {
 
 func (p Postgres) GetAllRequests() ([]models.Request, error) {
 	result := make([]models.Request, 0)
-	query := `select id, data from request`
+	query := `select id, method, scheme, url, headers, cookies, get_params, post_params from request`
 
 	rows, err := p.conn.Query(query)
 	if err != nil {
@@ -20,13 +21,21 @@ func (p Postgres) GetAllRequests() ([]models.Request, error) {
 	}
 
 	for rows.Next() {
-		var req models.Request
-		req.Req = make([]byte, 0)
+		req := models.NewRequest()
+		headers := make([]byte, 0)
+		cookies := make([]byte, 0)
+		getParams := make([]byte, 0)
+		postParams := make([]byte, 0)
 
-		err = rows.Scan(&req.Id, &req.Req)
+		err = rows.Scan(&req.Id, &req.Method, &req.Scheme, &req.Url, &headers, &cookies, &getParams, &postParams)
 		if err != nil {
 			return nil, err
 		}
+
+		json.Unmarshal(headers, req.Headers)
+		json.Unmarshal(cookies, req.Cookies)
+		json.Unmarshal(getParams, req.GetParams)
+		json.Unmarshal(postParams, req.PostParams)
 
 		result = append(result, req)
 	}
@@ -34,29 +43,38 @@ func (p Postgres) GetAllRequests() ([]models.Request, error) {
 }
 
 func (p Postgres) GetRequest(id int) (models.Request, error) {
-	var result models.Request
-	query := `select id, data from request where id = $1`
+	req := models.NewRequest()
+	headers := make([]byte, 0)
+	cookies := make([]byte, 0)
+	getParams := make([]byte, 0)
+	postParams := make([]byte, 0)
 
-	result.Req = make([]byte, 0)
-	err := p.conn.QueryRow(query, id).Scan(&result.Id, &result.Req)
+	query := `select id, method, scheme, url, headers, cookies, get_params, post_params from request where id = $1`
+	err := p.conn.QueryRow(query, id).Scan(&req.Id, &req.Method, &req.Scheme, &req.Url, &headers, &cookies, &getParams, &postParams)
 	if err != nil {
 		return models.Request{}, err
 	}
 
-	return result, nil
+	json.Unmarshal(headers, &req.Headers)
+	json.Unmarshal(cookies, &req.Cookies)
+	json.Unmarshal(getParams, &req.GetParams)
+	json.Unmarshal(postParams, &req.PostParams)
+
+	return req, nil
 }
 
 func (p Postgres) GetResponse(id int) (models.Response, error) {
-	var result models.Response
-	query := `select id, data from response where id = $1`
+	query := `select id, request_id, code, message, headers, body from response where id = $1`
 
-	result.Res = make([]byte, 0)
-	err := p.conn.QueryRow(query, id).Scan(&result.Id, &result.Res)
+	res := models.NewResponse()
+	headers := make([]byte, 0)
+	err := p.conn.QueryRow(query, id).Scan(&res.Id, &res.Code, &res.Message, &headers, &res.Body)
 	if err != nil {
 		return models.Response{}, err
 	}
 
-	return result, nil
+	json.Unmarshal(headers, &res.Headers)
+	return res, nil
 }
 
 func New(c *sql.DB) scanner.Repository {
