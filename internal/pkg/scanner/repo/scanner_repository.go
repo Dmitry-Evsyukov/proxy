@@ -32,10 +32,10 @@ func (p Postgres) GetAllRequests() ([]models.Request, error) {
 			return nil, err
 		}
 
-		json.Unmarshal(headers, req.Headers)
-		json.Unmarshal(cookies, req.Cookies)
-		json.Unmarshal(getParams, req.GetParams)
-		json.Unmarshal(postParams, req.PostParams)
+		json.Unmarshal(headers, &req.Headers)
+		json.Unmarshal(cookies, &req.Cookies)
+		json.Unmarshal(getParams, &req.GetParams)
+		json.Unmarshal(postParams, &req.PostParams)
 
 		result = append(result, req)
 	}
@@ -64,11 +64,11 @@ func (p Postgres) GetRequest(id int) (models.Request, error) {
 }
 
 func (p Postgres) GetResponse(id int) (models.Response, error) {
-	query := `select id, request_id, code, message, headers, body from response where id = $1`
+	query := `select id, request_id, code, message, headers, body from response where request_id = $1`
 
 	res := models.NewResponse()
 	headers := make([]byte, 0)
-	err := p.conn.QueryRow(query, id).Scan(&res.Id, &res.Code, &res.Message, &headers, &res.Body)
+	err := p.conn.QueryRow(query, id).Scan(&res.Id, &res.ReqId, &res.Code, &res.Message, &headers, &res.Body)
 	if err != nil {
 		return models.Response{}, err
 	}

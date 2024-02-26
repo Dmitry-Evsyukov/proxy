@@ -63,41 +63,26 @@ func ResponseToStruct(resp *http.Response, reqId int) (models.Response, error) {
 	return result, nil
 }
 
-//func JsonToResponse(data []byte) (*http.Response, error) {
-//	respJson := make(map[string]any)
-//	err := json.Unmarshal(data, &respJson)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	result := &http.Response{
-//		Status:     respJson["message"].(string),
-//		StatusCode: respJson["status"].(int),
-//	}
-//
-//	for key, value := range respJson["headers"].(map[string]any) {
-//		result.Header.Add(key, value.(string))
-//	}
-//
-//	buffer := bytes.NewBuffer(respJson["body"].([]byte))
-//	err = result.Write(buffer)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return result, nil
-//}
+func StructToRequest(req models.Request, symbol string) (*http.Request, error) {
+	params, err := json.Marshal(req.PostParams)
 
-func JsonToRequest(data []byte) (*http.Request, error) {
-	reqJson := make(map[string]any)
-	err := json.Unmarshal(data, &reqJson)
+	result, err := http.NewRequest(req.Method, req.Url, bytes.NewBuffer(params))
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := http.NewRequest(reqJson["method"].(string), reqJson["path"].(string), bytes.NewReader(reqJson["post_params"].([]byte)))
-	if err != nil {
-		return nil, err
+	for k, v := range req.Headers {
+		if val, ok := v.(string); ok {
+			result.Header.Add(k, val+symbol)
+		}
 	}
+
+	for k, v := range req.Cookies {
+		result.AddCookie(&http.Cookie{
+			Name:  k,
+			Value: v.(string) + symbol,
+		})
+	}
+
 	return result, nil
 }
