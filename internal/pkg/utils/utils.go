@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"main/internal/models"
@@ -85,4 +86,16 @@ func StructToRequest(req models.Request, symbol string) (*http.Request, error) {
 	}
 
 	return result, nil
+}
+
+func GenTLSConf(host, URL string) (tls.Config, error) {
+	tlsCert, err := tls.LoadX509KeyPair("certs/ca.crt", "certs/ca.key")
+	if err != nil {
+		return tls.Config{}, err
+	}
+
+	return tls.Config{
+		Certificates: []tls.Certificate{tlsCert},
+		ServerName:   URL,
+	}, nil
 }
