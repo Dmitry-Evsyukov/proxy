@@ -2,6 +2,7 @@ package scannerRepo
 
 import (
 	"database/sql"
+	"main/internal/models"
 	"main/internal/pkg/scanner"
 )
 
@@ -9,33 +10,53 @@ type Postgres struct {
 	conn *sql.DB
 }
 
-func (p Postgres) GetAllRequests() ([][]byte, error) {
-	//TODO implement me
-	panic("implement me")
-}
+func (p Postgres) GetAllRequests() ([]models.Request, error) {
+	result := make([]models.Request, 0)
+	query := `select id, data from request`
 
-func (p Postgres) GetRequest(id int) ([]byte, error) {
-	query := `select data from request where id = $1`
-
-	data := make([]byte, 0)
-	err := p.conn.QueryRow(query, id).Scan(data)
+	rows, err := p.conn.Query(query)
 	if err != nil {
 		return nil, err
 	}
 
-	return data, nil
+	for rows.Next() {
+		var req models.Request
+		req.Req = make([]byte, 0)
+
+		err = rows.Scan(&req.Id, &req.Req)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, req)
+	}
+	return result, nil
 }
 
-func (p Postgres) GetResponse(id int) ([]byte, error) {
-	query := `select data from response where id = $1`
+func (p Postgres) GetRequest(id int) (models.Request, error) {
+	var result models.Request
+	query := `select id, data from request where id = $1`
 
-	data := make([]byte, 0)
-	err := p.conn.QueryRow(query, id).Scan(data)
+	result.Req = make([]byte, 0)
+	err := p.conn.QueryRow(query, id).Scan(&result.Id, &result.Req)
 	if err != nil {
-		return nil, err
+		return models.Request{}, err
 	}
 
-	return data, nil
+	return result, nil
+}
+
+func (p Postgres) GetResponse(id int) (models.Response, error) {
+	var result models.Response
+	query := `select id, data from response where id = $1`
+
+	result.Res = make([]byte, 0)
+	err := p.conn.QueryRow(query, id).Scan(&result.Id, &result.Res)
+	if err != nil {
+		return models.Response{}, err
+	}
+
+	return result, nil
 }
 
 func New(c *sql.DB) scanner.Repository {
