@@ -14,4 +14,13 @@ services:
     ports:
       - "5432:5432" # redundant
   proxy:
-    image: tech-proxy
+    build:
+      context: ../
+      dockerfile: deployment/docker/Dockerfile
+    depends_on:
+      - postgres
+    ports:
+      - "8081:8081"
+      - "8000:8000"
+
+

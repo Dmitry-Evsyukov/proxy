@@ -12,7 +12,7 @@ import (
 	"net/http"
 )
 
-const dbUrl = "postgres://proxy:proxy@localhost:5432/proxy?sslmode=disable"
+const dbUrl = "postgres://proxy:proxy@postgres:5432/proxy?sslmode=disable"
 const proxyAddr = ":8081"
 const webApiAddr = ":8000"
 
